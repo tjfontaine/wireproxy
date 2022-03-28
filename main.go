@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/armon/go-socks5"
+	"github.com/wzshiming/socks5"
 
 	"golang.zx2c4.com/go118/netip"
 	"golang.zx2c4.com/wireguard/conn"
@@ -237,19 +237,14 @@ func socks5Routine(config map[string]string) (func(*netstack.Net), error) {
 	}
 
 	routine := func(tnet *netstack.Net) {
-		conf := &socks5.Config{Dial: tnet.DialContext, Resolver: NetstackDNSResolver{tnet: tnet}}
-		if username, ok := config["username"]; ok {
-			validator := CredentialValidator{username: username}
-			password, ok := config["password"]
-			if ok {
-				validator.password = password
-			}
-
-			conf.Credentials = validator
+		logger := log.New(os.Stderr, "[SOCKS5] ", log.LstdFlags)
+		server := &socks5.Server{
+			Logger:    logger,
+			ProxyDial: tnet.DialContext,
 		}
-		server, err := socks5.New(conf)
-		if err != nil {
-			log.Panic(err)
+
+		if username, ok := config["username"]; ok {
+			server.Authentication = socks5.UserAuth(username, config["password"])
 		}
 
 		if err := server.ListenAndServe("tcp", bindAddr); err != nil {
