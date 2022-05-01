@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -122,40 +123,28 @@ func (d VirtualTun) resolveToAddrPort(endpoint *addressPort) (*netip.AddrPort, e
 	return &addrPort, nil
 }
 
-func handleAssociate(ctx context.Context, writer io.Writer, request *socks5.Request) error {
-	logger.Printf("associate: %+v\n", request)
-	return nil
-}
-
 func handleBind(ctx context.Context, writer io.Writer, request *socks5.Request) error {
 	logger.Printf("bind: %+v\n", request)
-	return nil
-}
-
-func handleConnect(ctx context.Context, writer io.Writer, request *socks5.Request) error {
-	logger.Printf("connect: %+v\n", request)
-	return nil
+	return fmt.Errorf("bind isn't implemented")
 }
 
 // Spawns a socks5 server.
 func (config *Socks5Config) SpawnRoutine(vt *VirtualTun) {
-	/*
-		conf := &socks5.Config{Dial: vt.tnet.DialContext, Resolver: vt}
-		if username := config.Username; username != "" {
-			validator := CredentialValidator{username: username}
-			validator.password = config.Password
-			conf.Credentials = validator
-		}
-	*/
-
-	server := socks5.NewServer(
+	opts := []socks5.Option{
 		socks5.WithResolver(vt),
 		socks5.WithDial(vt.tnet.DialContext),
 		socks5.WithBindHandle(handleBind),
-		/*socks5.WithAssociateHandle(handleAssociate),
-		socks5.WithConnectHandle(handleConnect),*/
 		socks5.WithRule(socks5.NewPermitAll()),
-		socks5.WithLogger(socks5.NewLogger(logger)))
+		socks5.WithLogger(socks5.NewLogger(logger)),
+	}
+
+	if username := config.Username; username != "" {
+		credentials := socks5.StaticCredentials{}
+		credentials[username] = config.Password
+		opts = append(opts, socks5.WithCredential(credentials))
+	}
+
+	server := socks5.NewServer(opts...)
 
 	if err := server.ListenAndServe("tcp", config.BindAddress); err != nil {
 		log.Fatal(err)
