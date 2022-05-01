@@ -119,6 +119,13 @@ func (d VirtualTun) resolveToAddrPort(endpoint *addressPort) (*netip.AddrPort, e
 	return &addrPort, nil
 }
 
+var logger = log.New(os.Stdout, "socks5: ", log.LstdFlags)
+
+func handleAssociate(ctx context.Context, writer io.Writer, request *socks5.Request) error {
+	logger.Printf("associate: %+v\n", request)
+	return nil
+}
+
 // Spawns a socks5 server.
 func (config *Socks5Config) SpawnRoutine(vt *VirtualTun) {
 	/*
@@ -133,7 +140,8 @@ func (config *Socks5Config) SpawnRoutine(vt *VirtualTun) {
 	server := socks5.NewServer(
 		socks5.WithResolver(vt),
 		socks5.WithDial(vt.tnet.DialContext),
-		socks5.WithLogger(socks5.NewLogger(log.New(os.Stdout, "socks5: ", log.LstdFlags))))
+		socks5.WithAssociateHandle(handleAssociate),
+		socks5.WithLogger(socks5.NewLogger(logger)))
 
 	if err := server.ListenAndServe("tcp", config.BindAddress); err != nil {
 		log.Fatal(err)
