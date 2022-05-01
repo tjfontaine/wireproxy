@@ -115,9 +115,9 @@ func main() {
 		log.Fatalf("No servers found")
 	}
 
-	log.Printf("NordVPN Servers: %+v\n", servers)
-
 	conf.Device.PeerEndpoint = fmt.Sprintf("%s:%d", servers[0].Station, 51820)
+
+	log.Printf("Connecting to: %s\n", conf.Device.PeerEndpoint)
 
 	tnet, err := wireproxy.StartWireguard(conf.Device)
 	if err != nil {
@@ -129,7 +129,7 @@ func main() {
 	}
 
 	select {
-	case <-time.After(1 * time.Minute):
+	case <-time.After(4 * time.Hour):
 		log.Printf("Quiescing")
 	}
 }
