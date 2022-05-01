@@ -206,6 +206,8 @@ func tcpServerForward(vt *VirtualTun, raddr *addressPort, conn net.Conn) {
 
 	tcpAddr := TCPAddrFromAddrPort(*target)
 
+	logger.Printf("Forward %s:%d -> %s:%d\n", raddr.address, raddr.port, tcpAddr.IP, tcpAddr.Port)
+
 	sconn, err := net.DialTCP("tcp", nil, tcpAddr)
 	if err != nil {
 		errorLogger.Printf("TCP Server Tunnel to %s: %s\n", target, err.Error())
