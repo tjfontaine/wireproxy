@@ -2,7 +2,6 @@ package wireproxy
 
 import (
 	"context"
-	"crypto/subtle"
 	"errors"
 	"fmt"
 	"io"
@@ -20,12 +19,6 @@ import (
 
 // errorLogger is the logger to print error message
 var errorLogger = log.New(os.Stderr, "ERROR: ", log.LstdFlags)
-
-// CredentialValidator stores the authentication data of a socks5 proxy
-type CredentialValidator struct {
-	username string
-	password string
-}
 
 // VirtualTun stores a reference to netstack network and DNS configuration
 type VirtualTun struct {
@@ -149,14 +142,6 @@ func (config *Socks5Config) SpawnRoutine(vt *VirtualTun) {
 	if err := server.ListenAndServe("tcp", config.BindAddress); err != nil {
 		log.Fatal(err)
 	}
-}
-
-// Valid checks the authentication data in CredentialValidator and compare them
-// to username and password in constant time.
-func (c CredentialValidator) Valid(username, password string) bool {
-	u := subtle.ConstantTimeCompare([]byte(c.username), []byte(username))
-	p := subtle.ConstantTimeCompare([]byte(c.password), []byte(password))
-	return u&p == 1
 }
 
 // connForward copy data from `from` to `to`, then close both stream.
