@@ -42,7 +42,7 @@ func StartWireguard(conf *DeviceConfig) (*VirtualTun, error) {
 	if err != nil {
 		return nil, err
 	}
-	dev := device.NewDevice(tun, conn.NewDefaultBind(), device.NewLogger(device.LogLevelVerbose, ""))
+	dev := device.NewDevice(tun, conn.NewDefaultBind(), device.NewLogger(device.LogLevelVerbose, "wireproxy"))
 	err = dev.IpcSet(setting.ipcRequest)
 	if err != nil {
 		return nil, err

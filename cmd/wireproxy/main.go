@@ -104,6 +104,20 @@ func main() {
 	// no file access is allowed from now on, only networking
 	pledgeOrPanic("stdio inet dns")
 
+	servers, err := wireproxy.GetNordvpnServers()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if len(servers) == 0 {
+		log.Fatalf("No servers found")
+	}
+
+	log.Printf("NordVPN Servers: %+v\n", servers)
+
+	conf.Device.PeerEndpoint = fmt.Sprintf("%s:%d", servers[0].Station, 51820)
+
 	tnet, err := wireproxy.StartWireguard(conf.Device)
 	if err != nil {
 		log.Fatal(err)
