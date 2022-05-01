@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/akamensky/argparse"
 	"github.com/octeep/wireproxy"
@@ -127,5 +128,8 @@ func main() {
 		go spawner.SpawnRoutine(tnet)
 	}
 
-	select {} // sleep eternally
+	select {
+	case <-time.After(1 * time.Minute):
+		log.Printf("Quiescing")
+	}
 }
