@@ -1,5 +1,10 @@
-build:
-	docker build -t wireproxy .
+.PHONY: wireproxy docker
+
+wireproxy:
+	go build ./cmd/wireproxy
+
+docker:
+	docker build -t wireproxy -f docker/Dockerfile .
 	
 run:
 	docker run \

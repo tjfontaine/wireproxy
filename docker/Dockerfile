@@ -1,7 +1,7 @@
 FROM golang:alpine AS go-build
 
 RUN apk --no-cache add --update git
-RUN git clone https://github.com/octeep/wireproxy.git
+COPY . ./wireproxy
 RUN cd ./wireproxy && go build ./cmd/wireproxy
 
 
