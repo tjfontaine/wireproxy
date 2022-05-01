@@ -126,6 +126,11 @@ func handleAssociate(ctx context.Context, writer io.Writer, request *socks5.Requ
 	return nil
 }
 
+func handleBind(ctx context.Context, writer io.Writer, request *socks5.Request) error {
+	logger.Printf("bind: %+v\n", request)
+	return nil
+}
+
 // Spawns a socks5 server.
 func (config *Socks5Config) SpawnRoutine(vt *VirtualTun) {
 	/*
@@ -141,6 +146,7 @@ func (config *Socks5Config) SpawnRoutine(vt *VirtualTun) {
 		socks5.WithResolver(vt),
 		socks5.WithDial(vt.tnet.DialContext),
 		socks5.WithAssociateHandle(handleAssociate),
+		socks5.WithBindHandle(handleBind),
 		socks5.WithLogger(socks5.NewLogger(logger)))
 
 	if err := server.ListenAndServe("tcp", config.BindAddress); err != nil {
