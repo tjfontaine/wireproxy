@@ -84,9 +84,12 @@ func (d VirtualTun) ResolveAddrWithContext(ctx context.Context, name string) (*n
 	return &addr, nil
 }
 
+var logger = log.New(os.Stdout, "socks5: ", log.LstdFlags)
+
 // Resolve resolves a hostname and returns an IP.
 // DNS traffic may or may not be routed depending on VirtualTun's setting
 func (d VirtualTun) Resolve(ctx context.Context, name string) (context.Context, net.IP, error) {
+	logger.Printf("resolve: %+v\n", name)
 	addr, err := d.ResolveAddrWithContext(ctx, name)
 	if err != nil {
 		return nil, nil, err
@@ -119,8 +122,6 @@ func (d VirtualTun) resolveToAddrPort(endpoint *addressPort) (*netip.AddrPort, e
 	return &addrPort, nil
 }
 
-var logger = log.New(os.Stdout, "socks5: ", log.LstdFlags)
-
 func handleAssociate(ctx context.Context, writer io.Writer, request *socks5.Request) error {
 	logger.Printf("associate: %+v\n", request)
 	return nil
@@ -128,6 +129,11 @@ func handleAssociate(ctx context.Context, writer io.Writer, request *socks5.Requ
 
 func handleBind(ctx context.Context, writer io.Writer, request *socks5.Request) error {
 	logger.Printf("bind: %+v\n", request)
+	return nil
+}
+
+func handleConnect(ctx context.Context, writer io.Writer, request *socks5.Request) error {
+	logger.Printf("connect: %+v\n", request)
 	return nil
 }
 
@@ -145,8 +151,10 @@ func (config *Socks5Config) SpawnRoutine(vt *VirtualTun) {
 	server := socks5.NewServer(
 		socks5.WithResolver(vt),
 		socks5.WithDial(vt.tnet.DialContext),
-		socks5.WithAssociateHandle(handleAssociate),
 		socks5.WithBindHandle(handleBind),
+		/*socks5.WithAssociateHandle(handleAssociate),
+		socks5.WithConnectHandle(handleConnect),*/
+		socks5.WithRule(socks5.NewPermitAll()),
 		socks5.WithLogger(socks5.NewLogger(logger)))
 
 	if err := server.ListenAndServe("tcp", config.BindAddress); err != nil {
