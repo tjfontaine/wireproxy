@@ -11,7 +11,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/armon/go-socks5"
+	"github.com/things-go/go-socks5"
 
 	"golang.zx2c4.com/go118/netip"
 	"golang.zx2c4.com/wireguard/tun/netstack"
@@ -121,16 +121,19 @@ func (d VirtualTun) resolveToAddrPort(endpoint *addressPort) (*netip.AddrPort, e
 
 // Spawns a socks5 server.
 func (config *Socks5Config) SpawnRoutine(vt *VirtualTun) {
-	conf := &socks5.Config{Dial: vt.tnet.DialContext, Resolver: vt}
-	if username := config.Username; username != "" {
-		validator := CredentialValidator{username: username}
-		validator.password = config.Password
-		conf.Credentials = validator
-	}
-	server, err := socks5.New(conf)
-	if err != nil {
-		log.Fatal(err)
-	}
+	/*
+		conf := &socks5.Config{Dial: vt.tnet.DialContext, Resolver: vt}
+		if username := config.Username; username != "" {
+			validator := CredentialValidator{username: username}
+			validator.password = config.Password
+			conf.Credentials = validator
+		}
+	*/
+
+	server := socks5.NewServer(
+		socks5.WithResolver(vt),
+		socks5.WithDial(vt.tnet.DialContext),
+		socks5.WithLogger(socks5.NewLogger(log.New(os.Stdout, "socks5: ", log.LstdFlags))))
 
 	if err := server.ListenAndServe("tcp", config.BindAddress); err != nil {
 		log.Fatal(err)
